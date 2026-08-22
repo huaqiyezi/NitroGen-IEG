@@ -1,6 +1,6 @@
 # run_eval.py - N3 zero-shot 评测：切好的帧 -> serve.py 推理 -> 与 parquet 真值比对
 # 输出：raw_predictions.csv + metrics_by_group.csv + metrics_overall.csv
-# 用法: py -3.10 run_eval.py [--limit N]   （--limit 用于小规模验证）
+# 用法: py -3.12 run_eval.py [--limit N]   （--limit 用于小规模验证）
 import argparse, os, pickle, time, json
 import numpy as np
 import pandas as pd

@@ -11,12 +11,22 @@ NitroGen 视觉→手柄动作基础模型的 zero-shot 评测工程。目标是
 | 项 | 版本/要求 |
 |---|---|
 | 系统 | Windows |
-| Python | **3.10**（唯一版本，评测+推理共用） |
-| 依赖 | `pip install pandas pyarrow matplotlib requests numpy zmq opencv-python` 与 torch cu128（`pip install torch --index-url https://download.pytorch.org/whl/cu128`） |
+| Python | **3.12**（唯一版本，推理与评测/分析共用；torch cu128） |
+| 依赖 | pandas、pyarrow、numpy、matplotlib、requests、pyzmq、opencv-python、torch（安装命令见下方） |
 | 外部工具 | **ffmpeg 9.0.1**（含 ffprobe，切帧/校验）、**yt-dlp**（下载视频） |
 | 代理 | 下载 twitch 视频需代理，地址由 `download_videos.py` 的 `--proxy` 参数指定 |
 
-> **不同电脑适配**：代码本身兼容 Python 3.10–3.12。关键在 torch 的 CUDA 版本需匹配显卡架构——安装时用对应 index-url（cu128 见上），其余依赖任意 3.10+ 均可 `pip install`。
+**依赖安装命令**（Python 3.12）：
+
+```bash
+# 普通依赖（评测/分析/可视化；用国内 PyPI 镜像加速，如清华）
+pip install pandas pyarrow matplotlib requests numpy pyzmq opencv-python -i https://pypi.tuna.tsinghua.edu.cn/simple
+
+# torch（本机需 cu128，与显卡架构匹配；从 PyTorch 官方 cu128 源安装，勿加 PyPI 镜像）
+pip install torch --index-url https://download.pytorch.org/whl/cu128
+```
+
+> **不同电脑适配**：代码本身兼容 Python 3.10–3.12，本仓库统一使用 Python 3.12（推理与评测/分析共用）。关键在 torch 的 CUDA 版本需匹配显卡架构，安装时用对应 CUDA 的 index-url（上例为 cu128）。
 
 ## 二、目录职责
 
@@ -78,10 +88,14 @@ python probes\extract\extract_frames.py  # 按帧号从视频切出 PNG
 ```bash
 # 进入模型仓库目录（与本仓库同级；换成你的实际路径）
 cd ../NitroGen
-py -3.10 scripts\serve.py checkpoints\ng.pt --port 5555
+# 必做：用 HF 镜像源，避免本机直连 huggingface.co 的 SSL 证书问题；缓存会自动下载到默认位置
+$env:HF_ENDPOINT="https://hf-mirror.com"
+py -3.12 scripts\serve.py checkpoints\ng.pt --port 5555
 ```
 
-- 需权重 `checkpoints\ng.pt` 与 SigLIP 视觉编码器（`hf_cache\hub\...\model.safetensors`）就绪；
+- 需权重 `checkpoints\ng.pt`；
+- **镜像源会自动下载 SigLIP 视觉编码器缓存**（约 3.5GB，首次运行需几分钟）；
+- 可选：若不想占系统盘空间，可另设缓存位置 `$env:HF_HOME="D:\yourpath\hf_cache"`；
 - 看到 `Server running on port 5555` 即成功。
 
 ### 第 6 步：跑评测（需第 5 步服务在跑）
