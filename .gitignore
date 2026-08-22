@@ -1,0 +1,108 @@
+# ============================================================
+# NitroGen-IEG 课题仓库 .gitignore
+# 原则：
+#   1) 体积大且可再生/可另存的内容（数据集、视频、切帧、第三方工具、缓存）不入库；
+#   2) 敏感/本机环境文件不入库（防御性规则）；
+#   3) 调试期旧版/一次性脚本不入库（留本地，避免仓库堆满过程文件）；
+#   4) 内部沟通记录（交接包）不入库。
+# 入库内容：保留的核心脚本(probes/) + README.md + .gitignore 本身。
+# ============================================================
+
+# ---------- 1. 数据集原始包（1.73GB，必忽略） ----------
+# 原因：SHARD_0000.tar.gz 是官方数据集分片，体积最大且可从官方/HF 重新下载；
+#       不入库避免仓库被撑到 2GB+，需要时按 README 重新下载。
+shards/actions/
+
+# ---------- 2. 切帧画面（中间产物 ~1.09GB，必忽略） ----------
+# 原因：1000 张 PNG 由视频片段用 ffmpeg 按帧号切出，保留视频+帧号清单即可复现。
+shards/frames/
+
+# ---------- 3. 视频片段（~123MB，忽略） ----------
+# 原因：15 个 mp4 按 metadata.url 从 twitch 下载，可按 URL 重新下载。
+shards/videos/
+
+# ---------- 4. 第三方工具 ffmpeg（~433MB，忽略） ----------
+# 原因：ffmpeg 是第三方开源工具（编译包+zip），README 写明版本(9.0.1 essentials)
+#       后按官方渠道安装即可，不入库。
+tools/
+
+# ---------- 5. HF/模型缓存（必忽略） ----------
+# 原因：shards/.cache 是下载数据集时的 HF 缓存目录，含临时分片，可重新下载。
+shards/.cache/
+
+# ---------- 6. 运行日志（必忽略） ----------
+# 原因：serve.py 的运行日志(serve_err/out.log)每次运行都会变化，属噪音。
+shards/*.log
+
+# ---------- 7. 内部沟通记录（不入库） ----------
+# 原因：交接包（项目协作备忘、交接档案等）是学生与 AI 的内部协作记录，
+#       非课题产出，只留本地；如后续需要可在 README 简述项目约定。
+交接包/
+
+# ---------- 8. 调试期旧版/一次性脚本（留本地，不入库） ----------
+# 原因：这些是排查/试错阶段的脚本，已有可用的最终版本或问题已定位，
+#       保留会堆满仓库、影响"小步高质量提交"；文件仍留在本地备查。
+#   旧版统计/迭代（被新版替代）：
+probes/analysis/n2_stats.py
+probes/analysis/n2_stats_v2.py
+probes/analysis/n2_stats_v3.py
+probes/analysis/analyze_joy.py
+probes/analysis/analyze_joy2.py
+probes/analysis/scan_all_full_v2.py
+probes/analysis/scan_all_full_v3.py
+probes/analysis/scan_active_processed.py
+probes/extract/extract_hk_test_chunks2.py
+#   一次性探查/调试（问题已定位）：
+probes/analysis/analyze_dark_frames.py
+probes/analysis/check_frames.py
+probes/analysis/check_frames2.py
+probes/analysis/check_new_brightness.py
+probes/analysis/compare_brightness.py
+probes/analysis/compare_brightness2.py
+probes/analysis/compare_frames.py
+probes/analysis/probe_n2_metadata.py
+probes/analysis/probe_new_output.py
+probes/analysis/probe_output_distribution.py
+probes/analysis/probe_hk_other_videos.py
+probes/analysis/probe_hk_video_details.py
+probes/analysis/verify_processed.py
+probes/analysis/find_hk_processed.py
+probes/analysis/list_hk_chunks.py
+probes/analysis/count_shards.py
+probes/extract/extract_hk_local.py
+probes/extract/extract_hk_more.py
+probes/extract/extract_hk_parquet.py
+probes/extract/extract_hk_processed.py
+probes/extract/copy_core.py
+probes/eval/debug_predict.py
+probes/eval/test_color_fix.py
+#   扫描结果（已并入统计 CSV）：
+probes/analysis/hk_full_scan_result.txt
+probes/analysis/hk_scan_done.txt
+
+# ---------- 9. Python 缓存/安装产物（必忽略） ----------
+# 原因：解释器运行缓存与虚拟环境属本机安装产物，依赖应由清单重装，
+#       不推整棵依赖树进仓库。
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+
+# ---------- 10. 编辑器/操作系统垃圾（必忽略） ----------
+# 原因：编辑器本地缓存与系统临时文件，与项目内容无关。
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# ---------- 11. 敏感信息（未发现，防御性规则） ----------
+# 原因：若将来出现令牌/密码/私钥/本机环境文件，绝不能入库。
+.env
+*.pem
+*.key
+*_secret*
