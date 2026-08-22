@@ -36,7 +36,12 @@ NitroGen-IEG/
 ```
 > 另含 `docs/`（脚本说明）等文档目录。
 
-> 模型仓库（`serve.py`、`ng.pt` 权重）在独立的 `NitroGen\` 目录（与本仓库同级），不在本仓库。
+> 模型仓库（`serve.py`、`ng.pt` 权重）在独立的 `NitroGen\` 目录（与本仓库同级），不在本仓库。获取方式：
+> - 仓库：`git clone https://github.com/MineDojo/NitroGen.git`
+> - 权重 `ng.pt`：从 HuggingFace 下载 `nvidia/NitroGen`（`hf download nvidia/NitroGen ng.pt`，放入 `checkpoints\`）
+> - 还需 SigLIP 视觉编码器权重（首次运行自动从 HuggingFace 拉取，需能访问 HF）
+>
+> 本仓库**不执行 `pip install -e .`**：它会按 `pyproject.toml` 装全量依赖（含 `play` 一组的实机游玩库：`dxcam`、`vgamepad`、`xspeedhack`、`pywin32` 等），而本课题只用 `serve.py` 做推理、不跑实机游玩，这些依赖用不到且易引发版本冲突。只需进入模型仓库目录直接运行 `serve.py`（或设置 `PYTHONPATH` 指向模型仓库目录）即可。
 
 ## 三、按流程复现
 
@@ -54,7 +59,7 @@ python probes\extract\download_videos.py --video-id v946202192 --start 60 --end 
     --out test_v946202192_chunk_0003.mp4
 ```
 
-> 代理地址用 `--proxy` 指定。下载后用 ffprobe 校验帧数/色域。
+> 下载 twitch 视频需先开启代理，代理地址在命令里用 `--proxy` 参数指定（如 `--proxy http://127.0.0.1:7890`）。下载后用 ffprobe 校验帧数/色域。
 
 ### 第 3 步：生成选帧清单
 
