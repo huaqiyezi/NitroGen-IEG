@@ -1,9 +1,9 @@
-# download_shard0.py - 用 requests 关证书校验下载 SHARD_0000.tar.gz 到 D 盘
-# 本机 hf CLI 因证书校验失败下不动；此脚本绕过(仅下公开数据)。
+# download_shard0.py - 用 requests 关证书校验下载 SHARD_0000.tar.gz 到本地
+# 用 HF 镜像源下载，避免直连 huggingface.co 连接超时/证书问题（仅下公开数据）。
 import os, time, requests, urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-URL = "https://huggingface.co/datasets/nvidia/NitroGen/resolve/main/actions/SHARD_0000.tar.gz"
+URL = "https://hf-mirror.com/datasets/nvidia/NitroGen/resolve/main/actions/SHARD_0000.tar.gz"
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # probes/extract -> 仓库根
 OUT = os.path.join(ROOT, "shards", "actions", "SHARD_0000.tar.gz")
 os.makedirs(os.path.dirname(OUT), exist_ok=True)
