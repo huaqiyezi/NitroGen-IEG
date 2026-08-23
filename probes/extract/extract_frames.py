@@ -2,11 +2,12 @@
 # 输入：test_frames_plan.csv（块/帧号清单）
 # 输出：shards/frames/<block>/<absolute_frame>.png
 # 说明：块内帧号 = 视频帧号（下载片段从块起始帧开始）；分批 select 避免过滤器内存溢出
-import subprocess, os, sys
+import subprocess, os, sys, shutil
 import pandas as pd
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # probes/extract -> 仓库根
-FFMPEG = os.path.join(ROOT, "tools", "ffmpeg-9.0.1-essentials_build", "bin", "ffmpeg.exe")
+# ffmpeg 按 README 装到 PATH（与 download_videos.py 一致）；tools/ 下自备 ffmpeg 时兜底
+FFMPEG = shutil.which("ffmpeg") or os.path.join(ROOT, "tools", "ffmpeg-9.0.1-essentials_build", "bin", "ffmpeg.exe")
 VIDEO_DIR = os.path.join(ROOT, "shards", "videos")
 OUT_DIR = os.path.join(ROOT, "shards", "frames")
 PLAN = os.path.join(ROOT, "shards", "hk_chunks", "test_frames_plan.csv")
