@@ -10,7 +10,7 @@ import cv2
 
 # ---------- 配置 ----------
 SERVE_PORT = 5555
-ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))  # probes/eval -> 仓库根
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # probes/eval -> 仓库根
 FRAME_DIR = os.path.join(ROOT, "shards", "frames")
 HK_DIR = os.path.join(ROOT, "shards", "hk_chunks")
 EVAL_DIR = os.path.join(ROOT, "shards", "eval")

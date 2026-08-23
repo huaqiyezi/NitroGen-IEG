@@ -11,22 +11,72 @@ NitroGen 视觉→手柄动作基础模型的 zero-shot 评测工程。目标是
 | 项 | 版本/要求 |
 |---|---|
 | 系统 | Windows |
-| Python | **3.12**（唯一版本，推理与评测/分析共用；torch cu128） |
+| Python | **必须 Python 3.12**（唯一版本，推理与评测/分析共用；旧版本如 3.8 无法运行） |
 | 依赖 | pandas、pyarrow、numpy、matplotlib、requests、pyzmq、opencv-python、torch（安装命令见下方） |
-| 外部工具 | **ffmpeg 9.0.1**（含 ffprobe，切帧/校验）、**yt-dlp**（下载视频） |
+| 外部工具 | **git**（clone 模型仓库）、**ffmpeg 9.0.1**（含 ffprobe，切帧/校验）、**yt-dlp**（下载视频） |
 | 代理 | 下载 twitch 视频需代理；`download_videos.py` 自动探测代理地址，`--proxy` 可手动覆盖 |
 
-**依赖安装命令**（Python 3.12）：
+**确认/安装 Python 3.12**：
 
 ```bash
-# 普通依赖（评测/分析/可视化；用国内 PyPI 镜像加速，如清华）
-pip install pandas pyarrow matplotlib requests numpy pyzmq opencv-python -i https://pypi.tuna.tsinghua.edu.cn/simple
+# 查看本机已装的 Python 版本（Windows 建议用 py launcher）
+py -0
 
-# torch（CUDA 版本需匹配显卡架构，本仓库验证用 cu128；从对应 CUDA 源安装，勿加 PyPI 镜像）
-pip install torch --index-url https://download.pytorch.org/whl/cu128
+# 若无 3.12，前往 python.org/downloads 下载 Python 3.12 安装包，
+# 安装时务必勾选 "Add python.exe to PATH"。装好后用 py -3.12 指定。
+py -3.12 --version
 ```
 
-> **不同电脑适配**：代码本身兼容 Python 3.10–3.12，本仓库统一使用 Python 3.12（推理与评测/分析共用）。torch 的 CUDA 版本需匹配显卡架构，常见选择：Blackwell 新架构（如 RTX 50 系）用 cu128；30/40 系用 cu121/cu124；无 GPU 或 A 卡用 CPU 版（`pip install torch`）。不确定时用 `nvidia-smi` 查看驱动支持的 CUDA 版本，选 ≤ 该版本的 wheel。
+> 注意：命令统一用 `py -3.12`（不要用默认 `python`，它可能指向旧版本如 3.8，会导致依赖安装失败或脚本语法错误）。
+
+**外部工具安装**：
+
+> winget 仅为便捷方式，**非必需**；若 winget 不可用，一律用官网/pip 手动安装。
+
+```bash
+# git（clone 模型仓库用）：winget 安装；若 winget 失败（常见于权限/网络），
+# 改用官网 https://git-scm.com/download/win 下载 64-bit 安装包手动安装
+winget install Git.Git
+
+# ffmpeg（切帧/校验用）：官网 https://www.gyan.dev/ffmpeg/builds/ 下载 release-essentials
+# 解压到某目录，然后用一行命令把 bin 加入用户 PATH（PowerShell，把 <你的ffmpeg目录>\bin 换成实际路径）：
+[Environment]::SetEnvironmentVariable("Path", "$env:Path;<你的ffmpeg目录>\bin", "User")
+#   （winget 若不可靠，一律用官网手动装；ffmpeg 是绿色软件，无需安装器）
+# winget install Gyan.FFmpeg
+
+# yt-dlp（下载视频用，需先装好 Python 3.12）：
+py -3.12 -m pip install yt-dlp
+```
+
+> 装完 git/ffmpeg 后需**新开终端**使其生效（PATH 刷新）；若命令仍找不到，检查 PATH 是否已加入对应 bin 目录。
+
+**装好后验证**（需新开终端）：
+
+```bash
+git --version
+ffmpeg -version
+yt-dlp --version
+```
+
+> 三条命令都能显示版本号即为装好；若某条报"无法识别"，新开终端重试，仍不行则检查该工具是否装对/ PATH 是否正确。
+
+**依赖安装命令**（Python 3.12，用 `py -3.12 -m pip`）：
+
+```bash
+# 0) 可选：升级 pip（旧版可能装不上新依赖）
+py -3.12 -m pip install --upgrade pip
+
+# 1) 普通依赖（评测/分析/可视化；用国内 PyPI 镜像加速，如清华）
+py -3.12 -m pip install pandas pyarrow matplotlib requests numpy pyzmq opencv-python -i https://pypi.tuna.tsinghua.edu.cn/simple
+
+# 2) torch：按你的情况二选一，取消注释对应那一行执行
+#    （情况 A）有 NVIDIA GPU：装 CUDA 版（把 cu128 换成匹配你显卡的版本，如 cu121/cu124）
+# py -3.12 -m pip install torch --index-url https://download.pytorch.org/whl/cu128
+#    （情况 B）无 GPU 或 A 卡：装 CPU 版
+# py -3.12 -m pip install torch
+```
+
+> **不同电脑适配**：统一使用 Python 3.12（推理与评测/分析共用）。torch 的 CUDA 版本需匹配显卡架构：Blackwell 新架构（如 RTX 50 系）用 cu128；30/40 系用 cu121/cu124；**无 GPU 或 A 卡装 CPU 版**（`py -3.12 -m pip install torch`）。不确定时用 `nvidia-smi` 查看驱动支持的 CUDA 版本。
 
 ## 二、目录职责
 
@@ -47,7 +97,7 @@ NitroGen-IEG/
 ```
 > 另含 `docs/`（脚本说明）等文档目录。
 
-> 模型仓库（`serve.py`、`ng.pt` 权重）在独立的 `NitroGen\` 目录（与本仓库同级），不在本仓库。获取方式：
+> 模型仓库（`serve.py`、`ng.pt` 权重）在独立的 `NitroGen\` 目录（与本仓库同级），不在本仓库。获取方式（需先安装 git）：
 > - 仓库：`git clone https://github.com/MineDojo/NitroGen.git`
 > - 权重 `ng.pt`：从 HuggingFace 下载 `nvidia/NitroGen`（`hf download nvidia/NitroGen ng.pt`，放入 `checkpoints\`）
 > - 还需 SigLIP 视觉编码器权重（首次运行自动从 HuggingFace 拉取，需能访问 HF）
@@ -59,18 +109,18 @@ NitroGen-IEG/
 ### 第 1 步：准备测试标注（若尚未抽取）
 
 ```bash
-python probes\extract\download_shard0.py          # 下载数据集分片 SHARD_0000.tar.gz
-python probes\extract\extract_hk_test_chunks.py   # 抽测试分块 parquet + metadata.json
+py -3.12 probes\extract\download_shard0.py          # 下载数据集分片 SHARD_0000.tar.gz
+py -3.12 probes\extract\extract_hk_test_chunks.py   # 抽测试分块 parquet + metadata.json
 ```
 
 ### 第 2 步：下载测试视频片段（需代理）
 
 ```bash
 # 开启代理后直接运行：自动读步骤 1 的 metadata 取参数 + 自动探测代理
-python probes\extract\download_videos.py
+py -3.12 probes\extract\download_videos.py
 
 # 若自动探测不到代理，可手动指定
-python probes\extract\download_videos.py --proxy http://127.0.0.1:7890
+py -3.12 probes\extract\download_videos.py --proxy http://127.0.0.1:7890
 ```
 
 > 下载 twitch 视频需先开启代理（脚本自动探测，探测不到用 `--proxy` 手动指定）。下载后用 ffprobe 校验帧数/色域。
@@ -78,13 +128,13 @@ python probes\extract\download_videos.py --proxy http://127.0.0.1:7890
 ### 第 3 步：生成选帧清单
 
 ```bash
-python probes\eval\plan_test_frames.py   # 输出 test_frames_plan.csv（3 组 × 200 帧）
+py -3.12 probes\eval\plan_test_frames.py   # 输出 test_frames_plan.csv（3 组 × 200 帧）
 ```
 
 ### 第 4 步：切帧
 
 ```bash
-python probes\extract\extract_frames.py  # 按帧号从视频切出 PNG
+py -3.12 probes\extract\extract_frames.py  # 按帧号从视频切出 PNG
 ```
 
 ### 第 5 步：启动推理服务（模型仓库目录）
@@ -105,14 +155,14 @@ py -3.12 scripts\serve.py checkpoints\ng.pt --port 5555
 ### 第 6 步：跑评测（需第 5 步服务在跑）
 
 ```bash
-python probes\eval\run_eval.py           # 输出 raw_predictions.csv + 指标表
+py -3.12 probes\eval\run_eval.py           # 输出 raw_predictions.csv + 指标表
 ```
 
 ### 第 7 步：分析/出图（可选）
 
 ```bash
-python probes\analysis\analyze_button_mistakes.py  # 漏按/多按分析
-python probes\visual\make_compare_material.py      # 生成对比表/对比图
+py -3.12 probes\analysis\analyze_button_mistakes.py  # 漏按/多按分析
+py -3.12 probes\visual\make_compare_material.py      # 生成对比表/对比图
 ```
 
 ## 四、环境变量
