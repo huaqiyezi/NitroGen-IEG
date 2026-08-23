@@ -66,5 +66,6 @@ for b in BLOCKS:
     print(f"   前10帧(块内): {chosen[:10]}", flush=True)
 
 OUT = os.path.join(BASE, "test_frames_plan.csv")
+os.makedirs(os.path.dirname(OUT), exist_ok=True)
 pd.DataFrame(rows).to_csv(OUT, index=False, encoding="utf-8-sig")
 print(f"\n完成: 帧号清单已写 {OUT}（共 {len(rows)} 帧 = 3 组 × {FRAMES} 帧）")

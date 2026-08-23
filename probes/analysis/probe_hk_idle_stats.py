@@ -92,6 +92,7 @@ tf.close()
 
 # 写 CSV
 OUT = os.path.join(ROOT, "shards", "hk_chunks", "hk_idle_stats.csv")
+os.makedirs(os.path.dirname(OUT), exist_ok=True)
 df_out = pd.DataFrame(rows)
 df_out.to_csv(OUT, index=False, encoding="utf-8-sig")
 

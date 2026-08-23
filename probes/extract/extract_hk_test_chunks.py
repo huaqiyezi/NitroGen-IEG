@@ -5,6 +5,7 @@ import tarfile, json, os
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # probes/extract -> 仓库根
 TAR = os.path.join(ROOT, "shards", "actions", "SHARD_0000.tar.gz")
 OUT_DIR = os.path.join(ROOT, "shards", "hk_chunks")
+os.makedirs(OUT_DIR, exist_ok=True)
 
 # 目标分块 -> 输出文件名（与实际评测测试集一致：v946202192 的 chunk_0003/0065/0096）
 WANT = {
