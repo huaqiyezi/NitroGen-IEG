@@ -10,9 +10,10 @@ import cv2
 
 # ---------- 配置 ----------
 SERVE_PORT = 5555
-FRAME_DIR = r"D:\Projects\NitroGen-IEG\shards\frames"
-HK_DIR = r"D:\Projects\NitroGen-IEG\shards\hk_chunks"
-EVAL_DIR = r"D:\Projects\NitroGen-IEG\shards\eval"
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))  # probes/eval -> 仓库根
+FRAME_DIR = os.path.join(ROOT, "shards", "frames")
+HK_DIR = os.path.join(ROOT, "shards", "hk_chunks")
+EVAL_DIR = os.path.join(ROOT, "shards", "eval")
 PLAN = os.path.join(HK_DIR, "test_frames_plan.csv")
 
 BTN_COLS = ["dpad_down","dpad_left","dpad_right","dpad_up",

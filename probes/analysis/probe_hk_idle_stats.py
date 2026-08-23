@@ -1,11 +1,12 @@
 # probe_hk_idle_stats.py - 只读统计：候选视频的 HK processed 分块空闲率等参数
 # 范围：仅本地官方数据集 SHARD_0000.tar.gz，只读，不落盘
 # 输出：每块的空闲率/有效帧数/按键活跃度/摇杆活跃度 -> CSV
-import tarfile, json, time, io, csv
+import tarfile, json, time, io, csv, os
 
 import pandas as pd
 
-TAR = r"D:\Projects\NitroGen-IEG\shards\actions\SHARD_0000.tar.gz"
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # probes/analysis -> 仓库根
+TAR = os.path.join(ROOT, "shards", "actions", "SHARD_0000.tar.gz")
 WANT_VIDEOS = {"v2135647078", "v946202192"}
 
 # 17 按钮列
@@ -90,7 +91,7 @@ for m in tf:
 tf.close()
 
 # 写 CSV
-OUT = r"D:\Projects\NitroGen-IEG\shards\hk_chunks\hk_idle_stats.csv"
+OUT = os.path.join(ROOT, "shards", "hk_chunks", "hk_idle_stats.csv")
 df_out = pd.DataFrame(rows)
 df_out.to_csv(OUT, index=False, encoding="utf-8-sig")
 

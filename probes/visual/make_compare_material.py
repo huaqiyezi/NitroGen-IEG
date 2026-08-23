@@ -10,9 +10,10 @@ import matplotlib.pyplot as plt
 plt.rcParams["font.sans-serif"] = ["Microsoft YaHei", "SimHei"]
 plt.rcParams["axes.unicode_minus"] = False
 
-CSV = r"D:\Projects\NitroGen-IEG\shards\eval\raw_predictions.csv"
-FRAME_DIR = r"D:\Projects\NitroGen-IEG\shards\frames"
-OUT_DIR = r"D:\Projects\NitroGen-IEG\day4_report"
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # probes/visual -> 仓库根
+CSV = os.path.join(ROOT, "shards", "eval", "raw_predictions.csv")
+FRAME_DIR = os.path.join(ROOT, "shards", "frames")
+OUT_DIR = os.path.join(ROOT, "shards", "out")
 BTN = ["dpad_down","dpad_left","dpad_right","dpad_up",
        "left_shoulder","left_thumb","left_trigger",
        "right_shoulder","right_thumb","right_trigger",

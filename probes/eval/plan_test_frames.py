@@ -1,10 +1,12 @@
-# plan_test_frames.py - 第一步：IDLE 过滤 + 每组 200 帧选帧清单
-# 输入：3 个测试分块 parquet（本地）
+# plan_test_frames.py - IDLE 过滤 + 每组 200 帧选帧清单
+# 输入：自动读取步骤 2 抽出的 metadata.json（分块名 + start_frame），生成各分块选帧清单
 # 输出：每块 200 个非空闲帧的帧号清单 CSV（不切帧、不下视频）
+# 说明：分块由步骤 2 的 metadata.json 自动决定，改步骤 2 换分块时本步自动跟随。
 import pandas as pd
-import os
+import os, json, glob
 
-BASE = r"D:\Projects\NitroGen-IEG\shards\hk_chunks"
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # probes/eval -> 仓库根
+BASE = os.path.join(ROOT, "shards", "hk_chunks")
 FRAMES = 200
 
 # 17 按钮列
@@ -13,11 +15,16 @@ BTN_COLS = ["dpad_down","dpad_left","dpad_right","dpad_up",
             "right_shoulder","right_thumb","right_trigger",
             "south","west","east","north","back","start","guide"]
 
-BLOCKS = [
-    {"name": "test_v946202192_chunk_0003", "start_frame": 3600},
-    {"name": "test_v946202192_chunk_0065", "start_frame": 78000},
-    {"name": "test_v946202192_chunk_0096", "start_frame": 115200},
-]
+# 自动从步骤 2 抽出的 metadata.json 读取分块（块名 = metadata 文件名，start_frame = original_video.start_frame）
+BLOCKS = []
+for mp in sorted(glob.glob(os.path.join(BASE, "test_*_metadata.json"))):
+    name = os.path.basename(mp).replace("_metadata.json", "")
+    with open(mp, encoding="utf-8") as f:
+        meta = json.load(f)
+    sf = meta["original_video"]["start_frame"]
+    BLOCKS.append({"name": name, "start_frame": sf})
+if not BLOCKS:
+    raise SystemExit("未找到步骤 2 抽出的 metadata.json，请先运行 extract_hk_test_chunks.py")
 
 rows = []
 for b in BLOCKS:
@@ -58,6 +65,6 @@ for b in BLOCKS:
     # 简要：前 10 帧 + 分布
     print(f"   前10帧(块内): {chosen[:10]}", flush=True)
 
-OUT = r"D:\Projects\NitroGen-IEG\shards\hk_chunks\test_frames_plan.csv"
+OUT = os.path.join(BASE, "test_frames_plan.csv")
 pd.DataFrame(rows).to_csv(OUT, index=False, encoding="utf-8-sig")
 print(f"\n完成: 帧号清单已写 {OUT}（共 {len(rows)} 帧 = 3 组 × {FRAMES} 帧）")

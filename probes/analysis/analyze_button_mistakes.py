@@ -5,8 +5,10 @@ import os
 from collections import Counter, defaultdict
 import pandas as pd
 
-CSV = r"D:\Projects\NitroGen-IEG\shards\eval\raw_predictions.csv"
-OUT_DIR = r"D:\Projects\NitroGen-IEG\day4_report"
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # probes/analysis -> 仓库根
+CSV = os.path.join(ROOT, "shards", "eval", "raw_predictions.csv")
+OUT_DIR = os.path.join(ROOT, "shards", "out")
+os.makedirs(OUT_DIR, exist_ok=True)
 BTN = ["dpad_down","dpad_left","dpad_right","dpad_up",
        "left_shoulder","left_thumb","left_trigger",
        "right_shoulder","right_thumb","right_trigger",

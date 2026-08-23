@@ -2,14 +2,15 @@
 # 范围：仅本地官方数据集 SHARD_0000.tar.gz，抽取 3 个指定分块到 hk_chunks\
 import tarfile, json, os
 
-TAR = r"D:\Projects\NitroGen-IEG\shards\actions\SHARD_0000.tar.gz"
-OUT_DIR = r"D:\Projects\NitroGen-IEG\shards\hk_chunks"
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # probes/extract -> 仓库根
+TAR = os.path.join(ROOT, "shards", "actions", "SHARD_0000.tar.gz")
+OUT_DIR = os.path.join(ROOT, "shards", "hk_chunks")
 
-# 目标分块 -> 输出文件名
+# 目标分块 -> 输出文件名（与实际评测测试集一致：v946202192 的 chunk_0003/0065/0096）
 WANT = {
-    "v2135647078_chunk_0025": "test_v2135647078_chunk_0025_actions_processed.parquet",
-    "v2135647078_chunk_0082": "test_v2135647078_chunk_0082_actions_processed.parquet",
+    "v946202192_chunk_0003": "test_v946202192_chunk_0003_actions_processed.parquet",
     "v946202192_chunk_0065": "test_v946202192_chunk_0065_actions_processed.parquet",
+    "v946202192_chunk_0096": "test_v946202192_chunk_0096_actions_processed.parquet",
 }
 
 tf = tarfile.open(TAR, "r|gz")
@@ -47,9 +48,14 @@ for m in tf:
         if chunk in WANT:
             local = os.path.join(OUT_DIR, WANT[chunk])
             open(local, "wb").write(cur_processed)
+            # 顺带保存 metadata.json，供步骤 3 下载视频自动读取参数
+            meta_local = os.path.join(OUT_DIR, f"test_{chunk}_metadata.json")
+            with open(meta_local, "w", encoding="utf-8") as f:
+                json.dump(cur_meta, f, ensure_ascii=False, indent=2)
             ov = cur_meta["original_video"]
             print(f"抽出: {local} ({len(cur_processed)} bytes) | "
                   f"url={ov['url']} | 帧 {ov['start_frame']}-{ov['end_frame']}", flush=True)
+            print(f"  metadata: {meta_local}", flush=True)
             saved += 1
             if saved >= len(WANT):
                 break

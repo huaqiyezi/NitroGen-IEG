@@ -1,9 +1,11 @@
 # find_compare_cases.py - 只读分析：从 raw_predictions.csv 找"模型输出 vs 标注"对比案例
 # 范围：仅读本地评测明细，只打印不落盘
 # 输出：4 类案例（A 按键命中 / B 组合按错 / C 摇杆同向 / D 摇杆反向）的数量与候选帧
+import os
 import pandas as pd
 
-CSV = r"D:\Projects\NitroGen-IEG\shards\eval\raw_predictions.csv"
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # probes/visual -> 仓库根
+CSV = os.path.join(ROOT, "shards", "eval", "raw_predictions.csv")
 BTN = ["dpad_down","dpad_left","dpad_right","dpad_up",
        "left_shoulder","left_thumb","left_trigger",
        "right_shoulder","right_thumb","right_trigger",

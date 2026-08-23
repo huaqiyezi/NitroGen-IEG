@@ -4,7 +4,8 @@ import os, time, requests, urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 URL = "https://huggingface.co/datasets/nvidia/NitroGen/resolve/main/actions/SHARD_0000.tar.gz"
-OUT = r"D:\Projects\NitroGen-IEG\shards\actions\SHARD_0000.tar.gz"
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # probes/extract -> 仓库根
+OUT = os.path.join(ROOT, "shards", "actions", "SHARD_0000.tar.gz")
 os.makedirs(os.path.dirname(OUT), exist_ok=True)
 
 print("开始下载 SHARD_0000.tar.gz (约1.7GB)...")

@@ -65,9 +65,8 @@ label(0.13, 0.40, "交付")                              # ④→验收 左外�
 label(0.73, 0.40, "交付")                              # ③→验收 右外侧
 
 plt.tight_layout()
-out1 = r"D:\Projects\NitroGen-IEG\day2_report\模块图.png"
-out2 = r"c:\Users\Administrator\CodeBuddy\20260819100634\模块图.png"
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # probes/visual -> 仓库根
+out1 = os.path.join(ROOT, "shards", "out", "模块图.png")
+os.makedirs(os.path.dirname(out1), exist_ok=True)
 fig.savefig(out1, dpi=150, bbox_inches="tight")
-fig.savefig(out2, dpi=150, bbox_inches="tight")
 print("已生成:", out1)
-print("已生成:", out2)

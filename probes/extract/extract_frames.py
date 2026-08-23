@@ -5,23 +5,22 @@
 import subprocess, os, sys
 import pandas as pd
 
-FFMPEG = r"D:\Projects\NitroGen-IEG\tools\ffmpeg-9.0.1-essentials_build\bin\ffmpeg.exe"
-VIDEO_DIR = r"D:\Projects\NitroGen-IEG\shards\videos"
-OUT_DIR = r"D:\Projects\NitroGen-IEG\shards\frames"
-PLAN = r"D:\Projects\NitroGen-IEG\shards\hk_chunks\test_frames_plan.csv"
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # probes/extract -> 仓库根
+FFMPEG = os.path.join(ROOT, "tools", "ffmpeg-9.0.1-essentials_build", "bin", "ffmpeg.exe")
+VIDEO_DIR = os.path.join(ROOT, "shards", "videos")
+OUT_DIR = os.path.join(ROOT, "shards", "frames")
+PLAN = os.path.join(ROOT, "shards", "hk_chunks", "test_frames_plan.csv")
 BATCH = 25  # 每批帧号数
-
-VIDEO_MAP = {
-    "test_v946202192_chunk_0003": "test_v946202192_chunk_0003.mp4",
-    "test_v946202192_chunk_0065": "test_v946202192_chunk_0065.mp4",
-    "test_v946202192_chunk_0096": "test_v946202192_chunk_0096.mp4",
-}
 
 df = pd.read_csv(PLAN)
 total = 0
 
 for block, g in df.groupby("block"):
-    video = os.path.join(VIDEO_DIR, VIDEO_MAP[block])
+    # 视频文件名 = {block}.mp4（与步骤 3 download_videos.py 输出一致），自动跟随分块
+    video = os.path.join(VIDEO_DIR, f"{block}.mp4")
+    if not os.path.isfile(video):
+        print(f"[跳过] 缺少视频: {video}（请先运行 download_videos.py）", flush=True)
+        continue
     outdir = os.path.join(OUT_DIR, block)
     os.makedirs(outdir, exist_ok=True)
 

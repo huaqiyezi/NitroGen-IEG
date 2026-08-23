@@ -11,9 +11,10 @@ for fp in [r"C:\Windows\Fonts\msyh.ttc", r"C:\Windows\Fonts\msyhbd.ttc", r"C:\Wi
 plt.rcParams["font.sans-serif"] = ["Microsoft YaHei","SimHei","DejaVu Sans"]
 plt.rcParams["axes.unicode_minus"] = False
 
-BASE = r"D:\Projects\NitroGen-IEG\shards\hk_chunks"
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # probes/analysis -> 仓库根
+BASE = os.path.join(ROOT, "shards", "hk_chunks")
 OUT = os.path.join(BASE, "n2_stats")
-TAR = r"D:\Projects\NitroGen-IEG\shards\actions\SHARD_0000.tar.gz"
+TAR = os.path.join(ROOT, "shards", "actions", "SHARD_0000.tar.gz")
 
 # 空闲率适中的10个processed分块(37%~47%, 避开极端)
 WANT = ["v1658382176_chunk_0302","v1658382176_chunk_0413","v1658382176_chunk_0308",
