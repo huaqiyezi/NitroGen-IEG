@@ -14,7 +14,7 @@ NitroGen 视觉→手柄动作基础模型的 zero-shot 评测工程。目标是
 | Python | **3.12**（唯一版本，推理与评测/分析共用；torch cu128） |
 | 依赖 | pandas、pyarrow、numpy、matplotlib、requests、pyzmq、opencv-python、torch（安装命令见下方） |
 | 外部工具 | **ffmpeg 9.0.1**（含 ffprobe，切帧/校验）、**yt-dlp**（下载视频） |
-| 代理 | 下载 twitch 视频需代理，地址由 `download_videos.py` 的 `--proxy` 参数指定 |
+| 代理 | 下载 twitch 视频需代理；`download_videos.py` 自动探测代理地址，`--proxy` 可手动覆盖 |
 
 **依赖安装命令**（Python 3.12）：
 
@@ -22,11 +22,11 @@ NitroGen 视觉→手柄动作基础模型的 zero-shot 评测工程。目标是
 # 普通依赖（评测/分析/可视化；用国内 PyPI 镜像加速，如清华）
 pip install pandas pyarrow matplotlib requests numpy pyzmq opencv-python -i https://pypi.tuna.tsinghua.edu.cn/simple
 
-# torch（本机需 cu128，与显卡架构匹配；从 PyTorch 官方 cu128 源安装，勿加 PyPI 镜像）
+# torch（CUDA 版本需匹配显卡架构，本仓库验证用 cu128；从对应 CUDA 源安装，勿加 PyPI 镜像）
 pip install torch --index-url https://download.pytorch.org/whl/cu128
 ```
 
-> **不同电脑适配**：代码本身兼容 Python 3.10–3.12，本仓库统一使用 Python 3.12（推理与评测/分析共用）。关键在 torch 的 CUDA 版本需匹配显卡架构，安装时用对应 CUDA 的 index-url（上例为 cu128）。
+> **不同电脑适配**：代码本身兼容 Python 3.10–3.12，本仓库统一使用 Python 3.12（推理与评测/分析共用）。torch 的 CUDA 版本需匹配显卡架构，常见选择：Blackwell 新架构（如 RTX 50 系）用 cu128；30/40 系用 cu121/cu124；无 GPU 或 A 卡用 CPU 版（`pip install torch`）。不确定时用 `nvidia-smi` 查看驱动支持的 CUDA 版本，选 ≤ 该版本的 wheel。
 
 ## 二、目录职责
 
@@ -42,7 +42,8 @@ NitroGen-IEG/
 │   ├── hk_chunks/        #   抽取出的测试分块标注 parquet、选帧清单 csv
 │   ├── videos/           #   测试视频片段 mp4（yt-dlp 下载）
 │   ├── frames/           #   切帧画面 PNG（ffmpeg 生成）
-│   └── eval/             #   评测结果 csv（raw_predictions、metrics_by_group/overall）
+│   ├── eval/             #   评测结果 csv（raw_predictions、metrics_by_group/overall）
+│   └── out/              #   分析/可视化输出（对比图、模块图、漏按排行等）
 ```
 > 另含 `docs/`（脚本说明）等文档目录。
 
@@ -59,17 +60,20 @@ NitroGen-IEG/
 
 ```bash
 python probes\extract\download_shard0.py          # 下载数据集分片 SHARD_0000.tar.gz
-python probes\extract\extract_hk_test_chunks.py   # 从 tar.gz 抽 3 个测试分块 parquet
+python probes\extract\extract_hk_test_chunks.py   # 抽测试分块 parquet + metadata.json
 ```
 
-### 第 2 步：下载测试视频片段（走代理）
+### 第 2 步：下载测试视频片段（需代理）
 
 ```bash
-python probes\extract\download_videos.py --video-id v946202192 --start 60 --end 80 \
-    --out test_v946202192_chunk_0003.mp4
+# 开启代理后直接运行：自动读步骤 1 的 metadata 取参数 + 自动探测代理
+python probes\extract\download_videos.py
+
+# 若自动探测不到代理，可手动指定
+python probes\extract\download_videos.py --proxy http://127.0.0.1:7890
 ```
 
-> 下载 twitch 视频需先开启代理，代理地址在命令里用 `--proxy` 参数指定（如 `--proxy http://127.0.0.1:7890`）。下载后用 ffprobe 校验帧数/色域。
+> 下载 twitch 视频需先开启代理（脚本自动探测，探测不到用 `--proxy` 手动指定）。下载后用 ffprobe 校验帧数/色域。
 
 ### 第 3 步：生成选帧清单
 
@@ -88,14 +92,14 @@ python probes\extract\extract_frames.py  # 按帧号从视频切出 PNG
 ```bash
 # 进入模型仓库目录（与本仓库同级；换成你的实际路径）
 cd ../NitroGen
-# 必做：用 HF 镜像源，避免本机直连 huggingface.co 的 SSL 证书问题；缓存会自动下载到默认位置
+# 用 HF 镜像源：部分环境直连 huggingface.co 会证书校验失败，镜像源可规避且下载更稳；缓存会自动下载到默认位置
 $env:HF_ENDPOINT="https://hf-mirror.com"
 py -3.12 scripts\serve.py checkpoints\ng.pt --port 5555
 ```
 
 - 需权重 `checkpoints\ng.pt`；
 - **镜像源会自动下载 SigLIP 视觉编码器缓存**（约 3.5GB，首次运行需几分钟）；
-- 可选：若不想占系统盘空间，可另设缓存位置 `$env:HF_HOME="D:\yourpath\hf_cache"`；
+- 可选：若不想占系统盘空间，可另设缓存位置 `$env:HF_HOME="<你的缓存目录>"`（如 `D:\hf_cache`）；
 - 看到 `Server running on port 5555` 即成功。
 
 ### 第 6 步：跑评测（需第 5 步服务在跑）
@@ -115,7 +119,7 @@ python probes\visual\make_compare_material.py      # 生成对比表/对比图
 
 无必须的环境变量。代理地址在 `download_videos.py` 里用 `--proxy` 参数控制。
 
-> 脚本内数据路径为绝对路径，若目录与本机不同，请将脚本开头的路径常量改为你的实际路径。
+> 脚本内数据路径已用相对路径（基于脚本位置自动计算仓库根），拷到任意位置即可运行，无需改路径。
 
 ## 五、停止
 
