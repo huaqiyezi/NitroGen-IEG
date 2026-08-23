@@ -1,9 +1,13 @@
 # download_videos.py - 用 yt-dlp 下载步骤 2 抽出的测试视频片段（走代理）
 # 输入：自动读取步骤 2 抽出的分块 metadata.json，无需手动填参数
 # 输出：shards/videos/test_<chunk>.mp4
-# 用法：python download_videos.py [--proxy <地址>]
-# 前置：本机已安装 yt-dlp；下载 twitch 视频需先开启代理（脚本自动探测，--proxy 可手动覆盖）。
+# 用法：python download_videos.py [--proxy <地址>] [--no-tls-verify]
+# 前置：本机已安装 yt-dlp 与 ffmpeg；下载 twitch 视频需先开启代理（脚本自动探测，--proxy 可手动覆盖）。
 # 说明：分块由步骤 2 的 metadata.json 自动决定，改步骤 2 换分块时自动跟随；用户零手动参数。
+#       --no-tls-verify：若下载报 "Peer certificate failed verification"（本机证书链不完整），
+#       加此参数改用 yt-dlp 原生 HLS 下载器并关闭证书校验后再试。
+#       原因：ffmpeg（尤其 gnutls 后端）的 -tls_verify 0 在部分机器无法彻底关闭校验，
+#       而 yt-dlp 原生下载器走 Python，配合 --no-check-certificates 能可靠绕过证书问题。
 import argparse, subprocess, sys, os, json, re, socket, winreg, glob
 
 # 分块：自动扫描步骤 2 抽出的 metadata.json（chunk = 文件名，video-id/区间从 metadata 取）
@@ -41,6 +45,8 @@ def detect_proxy():
 def main():
     ap = argparse.ArgumentParser(description="自动下载评测所需的 3 个测试视频片段")
     ap.add_argument("--proxy", default=None, help="手动指定代理地址（默认自动探测）")
+    ap.add_argument("--no-tls-verify", action="store_true",
+                    help="改用 yt-dlp 原生下载器并关闭证书校验（本机证书链不完整、报 Peer certificate failed verification 时用）")
     args = ap.parse_args()
 
     proxy = args.proxy or detect_proxy()
@@ -74,6 +80,9 @@ def main():
                "-f", "best[height<=1080]", "-o", out_path, url]
         if proxy:
             cmd = ["yt-dlp", "--proxy", proxy] + cmd[1:]
+        if args.no_tls_verify:
+            cmd = ["yt-dlp", "--downloader", "native",
+                   "--no-check-certificates"] + cmd[1:]
         print("运行:", " ".join(cmd), flush=True)
         r = subprocess.run(cmd)
         if r.returncode != 0:
